@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minecraft Create 機械動力基礎｜LLM Wiki & 教學簡報</title>
+  <style>
+    :root {
+      --bg: #121417;
+      --panel: #1b1f24;
+      --panel-2: #242a31;
+      --brass: #d4a359;
+      --brass-dim: rgba(212, 163, 89, 0.16);
+      --copper: #c86d44;
+      --text: #e8ecf1;
+      --muted: #9aa5b1;
+      --border: #2e3640;
+      --ok: #52c41a;
+      --warn: #faad14;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--brass);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+    }
+    .tab-btn {
+      background: var(--panel-2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+    .tab-btn.active {
+      background: var(--brass-dim);
+      color: var(--brass);
+      border-color: var(--brass);
+    }
+
+    /* ===== SLIDES VIEW ===== */
+    #slides-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 20px 80px;
+    }
+    .slide-card {
+      width: 100%;
+      max-width: 920px;
+      min-height: 500px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-top: 4px solid var(--brass);
+      border-radius: 14px;
+      padding: 40px 44px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .slide-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .badge {
+      background: var(--brass-dim);
+      color: var(--brass);
+      border: 1px solid rgba(212,163,89,0.4);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .slide-card h1 { font-size: 2rem; color: var(--brass); margin-bottom: 14px; }
+    .slide-card h2 { font-size: 1.55rem; color: var(--text); margin-bottom: 16px; }
+    .slide-body p { margin-bottom: 14px; font-size: 1.05rem; }
+    .slide-body ul { margin: 10px 0 16px 22px; }
+    .slide-body li { margin-bottom: 8px; font-size: 1.02rem; }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin: 14px 0;
+    }
+    .box {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .box h3 { color: var(--brass); font-size: 1.05rem; margin-bottom: 8px; }
+    .callout {
+      background: rgba(200, 109, 68, 0.14);
+      border-left: 4px solid var(--copper);
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-top: 12px;
+      font-size: 0.95rem;
+    }
+    .formula {
+      background: #0d1014;
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--brass);
+      margin: 12px 0;
+      text-align: center;
+      font-size: 1.05rem;
+    }
+    .slide-controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(18, 20, 23, 0.94);
+      border-top: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+    }
+    .nav-btn {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .nav-btn:hover:not(:disabled) { border-color: var(--brass); color: var(--brass); }
+    .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .progress-wrap {
+      width: 180px;
+      height: 6px;
+      background: var(--panel-2);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-bar { height: 100%; background: var(--brass); transition: width 0.25s; }
+
+    /* ===== WIKI VIEW ===== */
+    #wiki-view {
+      display: none;
+      max-width: 1000px;
+      width: 100%;
+      margin: 28px auto 60px;
+      padding: 0 20px;
+    }
+    .wiki-intro {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 22px;
+    }
+    .wiki-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px 24px;
+      margin-bottom: 18px;
+    }
+    .wiki-card h2 { color: var(--brass); font-size: 1.25rem; margin-bottom: 8px; }
+    .wiki-source {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .wiki-source a { color: #7cc4fa; text-decoration: none; }
+    .wiki-source a:hover { text-decoration: underline; }
+    .wiki-card ul { margin-left: 20px; }
+    .wiki-card li { margin-bottom: 6px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">⚙️ Minecraft Create 機械動力基礎｜LLM Wiki & 教學簡報</div>
+  <div class="tabs">
+    <button class="tab-btn active" id="btn-slides" onclick="switchMode('slides')">🎬 教學簡報模式</button>
+    <button class="tab-btn" id="btn-wiki" onclick="switchMode('wiki')">📚 LLM Wiki 知識庫 (5 篇)</button>
+  </div>
+</header>
+
+<!-- ===== 簡報模式 ===== -->
+<main id="slides-view">
+  <div class="slide-card" id="slide-container"></div>
+  <div class="slide-controls">
+    <button class="nav-btn" id="prev-btn" onclick="changeSlide(-1)">← 上一頁</button>
+    <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+    <span id="page-indicator" style="font-size:0.9rem;color:var(--muted);">1 / 8</span>
+    <button class="nav-btn" id="next-btn" onclick="changeSlide(1)">下一頁 →</button>
+  </div>
+</main>
+
+<!-- ===== WIKI 模式 ===== -->
+<section id="wiki-view">
+  <div class="wiki-intro">
+    <h2 style="color:var(--brass);margin-bottom:8px;">📚 LLM Wiki：Minecraft Create（機械動力）新手知識庫</h2>
+    <p style="color:var(--muted);">
+      本知識庫採用「先討論架構、後逐篇 Ingest」建立，共收錄 <strong>5 篇 Create 官方 Wiki 資料</strong>。簡報中每一頁皆明確標註對應的 Wiki 條目編號，確保教學內容有據可查。
+    </p>
+  </div>
+
+  <article class="wiki-card" id="wiki-01">
+    <h2>[Wiki #01] 核心概念：動能與應力（Kinetic Stress）</h2>
+    <div class="wiki-source">Ingest 來源：<a href="https://create.fandom.com/wiki/Kinetic_Stress" target="_blank">Create Wiki - Kinetic Stress</a></div>
+    <ul>
+      <li><strong>轉速（RPM, Rotations Per Minute）</strong>：決定機器運作快慢，系統上限為 <strong>256 RPM</strong>。</li>
+      <li><strong>應力單位（SU, Stress Units）</strong>：代表動能網路的「負載容量」。發電機提供總 SU，機器消耗 SU。</li>
+      <li><strong>耗能公式</strong>：<code>機器消耗 SU = 基礎應力係數 × 當前 RPM</code>（轉速翻倍，耗能也翻倍）。</li>
+      <li><strong>過載（Overstressed）</strong>：當總消耗 SU &gt; 總提供 SU 時，整個連接的動能網路會立刻停止運轉。</li>
+    </ul>
+  </article>
+
+  <article class="wiki-card" id="wiki-02">
+    <h2>[Wiki #02] 動力來源：水車與大型水車（Water Wheel）</h2>
+    <div class="wiki-source">Ingest 來源：<a href="https://create.fandom.com/wiki/Water_Wheel" target="_blank">Create Wiki - Water Wheel</a></div>
+    <ul>
+      <li><strong>普通水車（Water Wheel）</strong>：提供 <strong>8 RPM</strong>、<strong>256 SU</strong>。</li>
+      <li><strong>大型水車（Large Water Wheel）</strong>：提供 <strong>4 RPM</strong>、<strong>512 SU</strong>（轉速慢一半，但應力翻倍）。</li>
+      <li><strong>並聯疊加</strong>：將多個水車接在同一條傳動軸上，轉速維持不變，但 <strong>SU 會直接相加</strong>（例如 2 座普通水車 = 512 SU）。</li>
+      <li><strong>版本重要修正（0.5.1+）</strong>：新版水車只要接觸到流動的水即可滿載輸出，<strong>不再需要計算水流方向或四面包覆水流</strong>。</li>
+    </ul>
+  </article>
+
+  <article class="wiki-card" id="wiki-03">
+    <h2>[Wiki #03] 傳動與變速：大小齒輪系統（Cogwheel）</h2>
+    <div class="wiki-source">Ingest 來源：<a href="https://create.fandom.com/wiki/Cogwheel" target="_blank">Create Wiki - Cogwheel</a></div>
+    <ul>
+      <li><strong>同尺寸咬合</strong>：轉速不變，但旋轉方向相反。</li>
+      <li><strong>斜向大帶小（Large → Small）</strong>：轉速 <strong>×2（加速）</strong>；反之小帶大則轉速 <strong>÷2（減速）</strong>。</li>
+      <li><strong>齒輪驅動限制</strong>：部分機器（如動力攪拌器、石磨）不能直接接傳動軸，必須透過<strong>側面齒輪</strong>咬合輸入動力。</li>
+      <li><strong>注意事項</strong>：加速不會增加總 SU，只會讓連接在高速端的機器消耗更多 SU。</li>
+    </ul>
+  </article>
+
+  <article class="wiki-card" id="wiki-04">
+    <h2>[Wiki #04] 基礎加工：動力壓床（Mechanical Press）</h2>
+    <div class="wiki-source">Ingest 來源：<a href="https://create.fandom.com/wiki/Mechanical_Press" target="_blank">Create Wiki - Mechanical Press</a></div>
+    <ul>
+      <li><strong>應力係數</strong>：<strong>8× RPM</strong>（例如 32 RPM 時消耗 256 SU）。</li>
+      <li><strong>壓片模式</strong>：下方放置置物台（Depot）或動力傳送帶，可將鐵錠、銅錠、金錠壓成對應的<strong>金屬板（Sheet）</strong>。</li>
+      <li><strong>打包 / 壓縮模式</strong>：下方改放工作盆（Basin），可將 9 個錠壓成金屬方塊，或進行高壓配方加工。</li>
+      <li><strong>安裝間距</strong>：壓床與下方置物台 / 工作盆之間必須<strong>空出 1 格</strong>才能運作。</li>
+    </ul>
+  </article>
+
+  <article class="wiki-card" id="wiki-05">
+    <h2>[Wiki #05] 實戰整合：新手自動化工作坊（Starter Workshop）</h2>
+    <div class="wiki-source">Ingest 來源：<a href="https://create.fandom.com/wiki/Starter_Workshop" target="_blank">Create Wiki - Starter Workshop</a></div>
+    <ul>
+      <li><strong>動力配置</strong>：並聯 2 座普通水車（共 <strong>512 SU</strong> @ 8 RPM），或 1 座大型水車（512 SU @ 4 RPM）。</li>
+      <li><strong>變速分配</strong>：透過 2 組「大帶小」齒輪將 8 RPM 加速至 <strong>32 RPM</strong> 驅動動力壓床（消耗 256 SU）。</li>
+      <li><strong>餘裕設計</strong>：剩餘 256 SU 可接給動力鋸或石磨，確保整套新手產線不會觸發 Overstressed 停機。</li>
+    </ul>
+  </article>
+</section>
+
+<script>
+  const slides = [
+    {
+      wiki: "總覽｜Wiki #01–#05",
+      title: "Minecraft Create（機械動力）新手入門",
+      subtitle: "從零看懂動能、齒輪變速與第一個自動化工作坊",
+      body: `
+        <p>這份教學簡報專為<strong>沒玩過 Create 模組的新手</strong>設計。不需要背紅石電路，只要懂「轉速」與「力量」，5 分鐘就能蓋出你的第一條自動化產線。</p>
+        <div class="grid-2">
+          <div class="box">
+            <h3>🎯 你將學到</h3>
+            <ul>
+              <li>RPM 與 SU（應力）的差別</li>
+              <li>水車發電與新版防呆觀念</li>
+              <li>大小齒輪 2 倍加速技巧</li>
+              <li>組裝不卡過載的新手工作坊</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h3>📚 知識來源</h3>
+            <p>本簡報所有數值與機制皆對應自 <strong>LLM Wiki 知識庫（5 篇官方條目）</strong>。點擊右上角標籤可隨時切換對照原文。</p>
+          </div>
+        </div>
+      `
+    },
+    {
+      wiki: "對應 Wiki #01：Kinetic Stress",
+      title: "核心觀念：轉速（RPM）vs 應力（SU）",
+      body: `
+        <p>在 Create 裡，所有機器都靠旋轉驅動，而動能系統只有兩個核心指標：</p>
+        <div class="grid-2">
+          <div class="box">
+            <h3>⚡ 轉速（RPM）</h3>
+            <p>決定機器「做得多快」。最高上限為 <strong>256 RPM</strong>。</p>
+          </div>
+          <div class="box">
+            <h3>💪 應力單位（SU）</h3>
+            <p>代表系統的「總力氣」。發電機提供 SU，機器消耗 SU。</p>
+          </div>
+        </div>
+        <div class="formula">機器耗能 (SU) = 基礎應力係數 × 當前 RPM</div>
+        <div class="callout">⚠️ <strong>過載（Overstressed）</strong>：只要總消耗 SU 大於總提供 SU，整條產線會立刻停擺！</div>
+      `
+    },
+    {
+      wiki: "對應 Wiki #02：Water Wheel",
+      title: "第一份動力：水車與大型水車",
+      body: `
+        <p>遊戲前期最穩定、零燃料消耗的動力來源就是水車：</p>
+        <div class="grid-2">
+          <div class="box">
+            <h3>🌊 普通水車</h3>
+            <ul>
+              <li>轉速：<strong>8 RPM</strong></li>
+              <li>應力：<strong>256 SU</strong></li>
+              <li>體積小，適合緊湊空間</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h3>🎡 大型水車</h3>
+            <ul>
+              <li>轉速：<strong>4 RPM</strong></li>
+              <li>應力：<strong>512 SU</strong></li>
+              <li>單顆力氣直接翻倍</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout">💡 <strong>並聯技巧 & 版本修正</strong>：把多座水車接在同一根軸上，SU 會直接相加。且 <strong>0.5.1 版之後</strong>只要碰到流動的水即可滿載，不必再煩惱水流方向！</div>
+      `
+    },
+    {
+      wiki: "對應 Wiki #03：Cogwheel",
+      title: "嫌水車轉太慢？用大小齒輪變速",
+      body: `
+        <p>水車只有 4～8 RPM，直接接機器會慢到懷疑人生。這時就要靠<strong>大齒輪（Large Cogwheel）</strong>與<strong>小齒輪（Cogwheel）</strong>：</p>
+        <ul>
+          <li><strong>同尺寸相接</strong>：轉速不變，旋轉方向相反。</li>
+          <li><strong>斜向「大帶小」</strong>：轉速直接 <strong>×2（加速）</strong>。</li>
+          <li><strong>斜向「小帶大」</strong>：轉速直接 <strong>÷2（減速）</strong>。</li>
+        </ul>
+        <div class="callout">⚠️ <strong>新手常見誤區</strong>：齒輪加速「不會」增加總 SU！轉速變 2 倍，機器的 SU 消耗也會跟著變 2 倍。</div>
+      `
+    },
+    {
+      wiki: "對應 Wiki #04：Mechanical Press",
+      title: "第一台加工機：動力壓床",
+      body: `
+        <p>製作進階零件（例如黃銅板、鐵板）必備的起手機器，應力係數為 <strong>8× RPM</strong>。</p>
+        <div class="grid-2">
+          <div class="box">
+            <h3>🔨 壓片模式</h3>
+            <p>下方放<strong>置物台（Depot）</strong>或輸送帶，將金屬錠壓成金屬板（Sheet）。</p>
+          </div>
+          <div class="box">
+            <h3>📦 壓縮 / 打包模式</h3>
+            <p>下方改放<strong>工作盆（Basin）</strong>，可將 9 個錠壓成金屬塊。</p>
+          </div>
+        </div>
+        <div class="callout">📏 <strong>安裝防呆</strong>：壓床與下方置物台之間<strong>一定要空出 1 格空間</strong>，貼在一起是不會動的！</div>
+      `
+    },
+    {
+      wiki: "對應 Wiki #05：Starter Workshop",
+      title: "實戰組裝：新手不卡過載工作坊",
+      body: `
+        <p>把前面學到的全部串起來，蓋出你的第一個 512 SU 基礎工作坊：</p>
+        <ul>
+          <li><strong>Step 1（發電）</strong>：並聯 2 座普通水車 → 獲得 <strong>512 SU @ 8 RPM</strong>。</li>
+          <li><strong>Step 2（加速）</strong>：串接 2 組「大帶小」齒輪 → <code>8 → 16 → 32 RPM</code>。</li>
+          <li><strong>Step 3（接機器）</strong>：接上動力壓床（32 RPM × 8 = <strong>256 SU</strong>）。</li>
+          <li><strong>Step 4（保留餘裕）</strong>：剩下 <strong>256 SU</strong> 可再接石磨或動力鋸，完全不怕過載！</li>
+        </ul>
+      `
+    },
+    {
+      wiki: "實戰檢查｜Wiki #01–#05",
+      title: "新手排錯清單（Troubleshooting）",
+      body: `
+        <p>機器不動了？照這 3 步檢查，90% 的問題都能秒解：</p>
+        <ul>
+          <li><strong>1. 戴上工程師護目鏡</strong>：看機器顯示是不是 <code>Overstressed</code>？是的話就加掛水車或降速。</li>
+          <li><strong>2. 檢查輸入方式</strong>：像動力攪拌器、石磨必須從<strong>側面用齒輪咬合</strong>，不能直接插傳動軸。</li>
+          <li><strong>3. 檢查空間距離</strong>：動力壓床、攪拌器與下方工作盆之間是否留有 <strong>1 格空隙</strong>？</li>
+        </ul>
+      `
+    },
+    {
+      wiki: "總結｜Wiki #01–#05",
+      title: "恭喜入門！下一步可以玩什麼？",
+      body: `
+        <p>你已經掌握 Create 機械動力最核心的 3 大基石：<strong>SU 負載觀念、水車並聯、齒輪變速</strong>。</p>
+        <div class="box" style="margin-top:16px;">
+          <h3>🚀 進階探索方向</h3>
+          <ul>
+            <li><strong>動力傳送帶（Mechanical Belt）</strong>：把壓床、洗礦機串成全自動流水線。</li>
+            <li><strong>蒸氣引擎（Steam Engine）</strong>：後期動輒數萬 SU 的主力發電機。</li>
+          </ul>
+        </div>
+        <p style="margin-top:18px;color:var(--muted);">💡 提示：點擊上方「📚 LLM Wiki 知識庫」可檢視完整 5 篇原始整理條目與來源連結。</p>
+      `
+    }
+  ];
+
+  let current = 0;
+
+  function renderSlide() {
+    const s = slides[current];
+    document.getElementById("slide-container").innerHTML = `
+      <div>
+        <div class="slide-meta">
+          <span>Slide ${current + 1} / ${slides.length}</span>
+          <span class="badge" onclick="switchMode('wiki')" title="點擊查看 Wiki 知識庫">${s.wiki}</span>
+        </div>
+        ${current === 0 ? `<h1>${s.title}</h1><p style="color:var(--muted);margin-bottom:20px;font-size:1.1rem;">${s.subtitle}</p>` : `<h2>${s.title}</h2>`}
+        <div class="slide-body">${s.body}</div>
+      </div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-top:20px;">
+        使用鍵盤 ← / → 方向鍵切換投影片
+      </div>
+    `;
+    document.getElementById("page-indicator").textContent = `${current + 1} / ${slides.length}`;
+    document.getElementById("progress-bar").style.width = `${((current + 1) / slides.length) * 100}%`;
+    document.getElementById("prev-btn").disabled = current === 0;
+    document.getElementById("next-btn").disabled = current === slides.length - 1;
+  }
+
+  function changeSlide(delta) {
+    const next = current + delta;
+    if (next >= 0 && next < slides.length) {
+      current = next;
+      renderSlide();
+    }
+  }
+
+  function switchMode(mode) {
+    const isSlides = mode === "slides";
+    document.getElementById("slides-view").style.display = isSlides ? "flex" : "none";
+    document.getElementById("wiki-view").style.display = isSlides ? "none" : "block";
+    document.getElementById("btn-slides").classList.toggle("active", isSlides);
+    document.getElementById("btn-wiki").classList.toggle("active", !isSlides);
+    history.replaceState(null, "", isSlides ? "#slides" : "#wiki");
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (document.getElementById("slides-view").style.display !== "none") {
+      if (e.key === "ArrowRight") changeSlide(1);
+      if (e.key === "ArrowLeft") changeSlide(-1);
+    }
+  });
+
+  renderSlide();
+  if (location.hash === "#wiki") switchMode("wiki");
+</script>
+</body>
+</html>
